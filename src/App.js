@@ -10,8 +10,7 @@ import {
   Compass 
 } from 'lucide-react';
 
-// Variables de configuración global
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5nZWxvdjI3IiwiYSI6ImNtcGgxNzZhbDB4NXgycHBvazk2YmYxcHgifQ.Kfb2IDdnlY2BeaM3GX65XA';
+// URL del microservicio de Inteligencia Artificial en Render
 const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com/api/predict-spatial";
 
 function App() {
@@ -21,7 +20,7 @@ function App() {
   const [predictionData, setPredictionData] = useState(null);
   const [error, setError] = useState(null);
 
-  // Intentar obtener la geolocalización real del usuario al iniciar
+  // Intentar obtener la geolocalización real del usuario al iniciar el sitio
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -81,7 +80,7 @@ function App() {
           <div className="flex items-center space-x-3">
             <Activity className="h-8 w-8 text-emerald-400 animate-pulse" />
             <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Arquitectura Metabólica Urbana
+              Arquitectura Metabólica Urbana V3
             </h1>
           </div>
           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5">
@@ -107,24 +106,24 @@ function App() {
               </div>
             </div>
 
-            {/* Contenedor del Mapa Embebido de Mapbox */}
+            {/* Contenedor del Mapa Embebido - OpenStreetMap Nativo Súper Estable */}
             <div className="flex-1 bg-slate-950 rounded-lg border border-slate-700 flex flex-col relative overflow-hidden min-h-[350px]">
               <iframe
-                title="Visor de Entorno Urbano"
+                title="Visor de Entorno Urbano OpenStreetMap"
                 width="100%"
                 height="100%"
                 style={{ border: 0, position: 'absolute', inset: 0 }}
-                src={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s-l+e11d48(${coords.lng},${coords.lat})/${coords.lng},${coords.lat},15,0/600x400?access_token=${MAPBOX_TOKEN}`}
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${coords.lng - 0.008}%2C${coords.lat - 0.005}%2C${coords.lng + 0.008}%2C${coords.lat + 0.005}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`}
                 loading="lazy"
               ></iframe>
               
               {/* Leyenda e Información flotante */}
-              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-sm border border-slate-700 p-2.5 rounded-lg max-w-xs pointer-events-none shadow-lg">
+              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-sm border border-slate-700 p-2.5 rounded-lg max-w-xs pointer-events-none shadow-lg z-10">
                 <p className="text-[11px] font-semibold text-slate-200 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-rose-500 animate-pulse" /> Cuadrante Sincronizado
+                  <MapPin className="h-3 w-3 text-rose-500 animate-pulse" /> Red Cartográfica Activa
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  Mapa analítico alimentado dinámicamente por la API de Mapbox.
+                  Ubicación centrada en tiempo real mediante OpenStreetMap.
                 </p>
               </div>
             </div>
@@ -236,7 +235,7 @@ function App() {
 
       {/* Pie de Página */}
       <footer className="bg-slate-950 border-t border-slate-800 p-3 text-center text-xs text-slate-600 font-mono">
-        &copy; 2026 Modelado Geoespacial Avanzado. Despliegue de Producción Completado Exitosamente.
+        &copy; 2026 Modelado Geoespacial Avanzado. Despliegue Estabilizado Completado.
       </footer>
     </div>
   );
