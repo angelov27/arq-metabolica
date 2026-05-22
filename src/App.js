@@ -20,7 +20,7 @@ function App() {
   const [predictionData, setPredictionData] = useState(null);
   const [error, setError] = useState(null);
 
-  // Intentar obtener la geolocalización real del usuario al iniciar el sitio
+  // Intentar obtener la geolocalización real del usuario
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -31,7 +31,7 @@ function App() {
           });
         },
         (err) => {
-          console.log("Utilizando coordenadas de referencia por defecto.");
+          console.log("Utilizando coordenadas por defecto.");
         }
       );
     }
@@ -66,7 +66,6 @@ function App() {
     }
   };
 
-  // Disparar consulta automática si las coordenadas cambian
   useEffect(() => {
     consultarPrediccion();
   }, [coords]);
@@ -80,7 +79,7 @@ function App() {
           <div className="flex items-center space-x-3">
             <Activity className="h-8 w-8 text-emerald-400 animate-pulse" />
             <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Arquitectura Metabólica Urbana V3
+              Arquitectura Metabólica Urbana v3.0
             </h1>
           </div>
           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5">
@@ -106,7 +105,7 @@ function App() {
               </div>
             </div>
 
-            {/* Contenedor del Mapa Embebido - OpenStreetMap Nativo Súper Estable */}
+            {/* Contenedor del Mapa Embebido - OpenStreetMap Nativo */}
             <div className="flex-1 bg-slate-950 rounded-lg border border-slate-700 flex flex-col relative overflow-hidden min-h-[350px]">
               <iframe
                 title="Visor de Entorno Urbano OpenStreetMap"
@@ -132,8 +131,6 @@ function App() {
 
         {/* Sección Derecha: Panel de Diagnóstico */}
         <div className="flex flex-col space-y-4">
-          
-          {/* Módulo Analítico del Modelo GCN */}
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Métricas del Entorno (Spatial GCN)
@@ -154,7 +151,6 @@ function App() {
 
             {!loading && !error && (
               <div className="space-y-4">
-                {/* Indicador de Nivel de Riesgo */}
                 <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl text-center">
                   <p className="text-xs text-slate-400 uppercase tracking-wide">Diagnóstico de Riesgo</p>
                   <p className="text-2xl font-black mt-1 text-amber-400 uppercase drop-shadow-sm">
@@ -163,7 +159,6 @@ function App() {
                   <p className="text-xs text-slate-500 mt-1 font-mono">Índice IARRI-MX: 0.49</p>
                 </div>
 
-                {/* Desglose de Variables SHAP */}
                 <div className="space-y-2.5">
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Influencia de Variables (SHAP)</p>
                   
@@ -200,7 +195,6 @@ function App() {
             )}
           </div>
 
-          {/* Tarjeta Informativa de Objetivos */}
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex-1">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Award className="h-4 w-4 text-amber-400" />
@@ -214,28 +208,16 @@ function App() {
                 </div>
                 <div>
                   <h4 className="text-xs font-semibold text-slate-200">Zonificación Segura</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Prioriza avenidas con infraestructura peatonal continua e iluminación optimizada.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3 items-start p-2 rounded-lg">
-                <div className="p-1.5 bg-emerald-500/10 rounded-md text-emerald-400 border border-emerald-500/10 shrink-0">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-200">Mitigación de Sedentarismo</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Planifica traslados utilizando áreas verdes integradas para reducir el impacto metabólico negativo.</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Prioriza avenidas con infraestructura peatonal continua.</p>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </main>
 
-      {/* Pie de Página */}
       <footer className="bg-slate-950 border-t border-slate-800 p-3 text-center text-xs text-slate-600 font-mono">
-        &copy; 2026 Modelado Geoespacial Avanzado. Despliegue Estabilizado Completado.
+        &copy; 2026 Modelado Geoespacial Avanzado.
       </footer>
     </div>
   );
