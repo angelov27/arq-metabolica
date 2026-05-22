@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { 
   MapPin, 
   Award, 
@@ -14,6 +15,10 @@ import {
   Sparkles,
   RefreshCw
 } from 'lucide-react';
+
+
+// Pega aquí tu token exactamente como me lo pasaste:
+mapboxgl.accessToken = 'pk.eyJ1IjoiYW5nZWxvdjI3IiwiYSI6ImNtcGgxNzZhbDB4NXgycHBvazk2YmYxcHgifQ.Kfb2IDdnlY2BeaM3GX65XA';
 
 // =========================================================================
 // SUB-COMPONENTES REUTILIZABLES DE LA INTERFAZ
