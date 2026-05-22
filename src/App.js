@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-// Forzamos el Token directo en la ventana global por si la librería se pone rejegas
-window.mapboxgl = window.mapboxgl || {};
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5nZWxvdjI3IiwiYSI6ImNtcGgxNzZhbDB4NXgycHBvazk2YmYxcHgifQ.Kfb2IDdnlY2BeaM3GX65XA';
-
-const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com/api/predict-spatial";
 import { 
   MapPin, 
   Award, 
@@ -13,18 +7,15 @@ import {
   Shield, 
   Activity, 
   Layers, 
-  Compass, 
-  CheckCircle,
-  AlertTriangle,
-  Flame,
-  Sparkles,
-  RefreshCw
+  Compass 
 } from 'lucide-react';
 
+// Forzamos el Token directo en la ventana global por si la librería se pone rejegas
+window.mapboxgl = window.mapboxgl || {};
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5nZWxvdjI3IiwiYSI6ImNtcGgxNzZhbDB4NXgycHBvazk2YmYxcHgifQ.Kfb2IDdnlY2BeaM3GX65XA';
 
-// Pega aquí tu token exactamente como me lo pasaste:
-mapboxgl.accessToken = 'pk.eyJ1IjoiYW5nZWxvdjI3IiwiYSI6ImNtcGgxNzZhbDB4NXgycHBvazk2YmYxcHgifQ.Kfb2IDdnlY2BeaM3GX65XA';
-
+const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com/api/predict-spatial";
+  
 // =========================================================================
 // SUB-COMPONENTES REUTILIZABLES DE LA INTERFAZ
 // =========================================================================
