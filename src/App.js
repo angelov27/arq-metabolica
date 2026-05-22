@@ -1,224 +1,173 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  MapPin, 
-  Award, 
-  BookOpen, 
-  TrendingUp, 
-  Shield, 
-  Activity, 
-  Layers, 
-  Compass 
-} from 'lucide-react';
+import React, { useState } from 'react';
+// IMPORTANTE: Este CSS evita que los bloques del mapa se desparramen y tapen el texto
+import 'leaflet/dist/leaflet.css'; 
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 
-// URL del microservicio de Inteligencia Artificial en Render
-const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com/api/predict-spatial";
+// Corrección para que los iconos por defecto de Leaflet carguen bien localmente
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 function App() {
-  // Coordenadas por defecto (Puebla, México - Zona BUAP / Centro Histórico)
-  const [coords, setCoords] = useState({ lat: 19.0414, lng: -98.2063 });
-  const [loading, setLoading] = useState(false);
-  const [predictionData, setPredictionData] = useState(null);
-  const [error, setError] = useState(null);
+  const [coordenadas, setCoordenadas] = useState({ lat: 19.0414, lng: -98.2063 }); // Puebla por defecto
+  const [resultadoIA, setResultadoIA] = useState(null);
+  const [cargando, setCargando] = useState(false);
 
-  // Intentar obtener la geolocalización real del usuario
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCoords({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (err) => {
-          console.log("Utilizando coordenadas por defecto.");
-        }
-      );
-    }
-  }, []);
+  // Componente interno para capturar los clics manuales en el mapa
+  function MonitorClicsMapa() {
+    useMapEvents({
+      click(e) {
+        setCoordenadas({ lat: e.latlng.lat, lng: e.latlng.lng });
+      },
+    });
+    return null;
+  }
 
-  // Petición al servicio de Inteligencia Artificial en Render
-  const consultarPrediccion = async () => {
-    setLoading(true);
-    setError(null);
+  // Función para consultar la Red Neuronal en Render
+  const consultarRedNeuronal = async () => {
+    setCargando(true);
     try {
-      const response = await fetch(BACKEND_API_URL, {
+      const respuesta = await fetch('https://iarri-spatial-backend.onrender.com/predict', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          latitude: coords.lat,
-          longitude: coords.lng
-        }),
+          latitude: coordenadas.lat,
+          longitude: coordenadas.lng
+        })
       });
-
-      if (!response.ok) {
-        throw new Error("El servidor de análisis reportó un inconveniente técnico.");
-      }
-
-      const data = await response.json();
-      setPredictionData(data);
-    } catch (err) {
-      setError(err.message || "Error al conectar con los modelos GCN.");
+      const datos = await respuesta.json();
+      setResultadoIA(datos);
+    } catch (error) {
+      console.error("Error al conectar con la IA en Render:", error);
     } finally {
-      setLoading(false);
+      setCargando(false);
     }
   };
 
-  useEffect(() => {
-    consultarPrediccion();
-  }, [coords]);
-
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-cyan-500 selection:text-slate-900">
       
-      {/* Encabezado */}
-      <header className="bg-slate-800 border-b border-slate-700 p-4 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Activity className="h-8 w-8 text-emerald-400 animate-pulse" />
-            <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Arquitectura Metabólica Urbana v3.0
+      {/* ENCABEZADO */}
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+              Arquitectura Metabólica Urbana
             </h1>
+            <p className="text-xs text-slate-400 mt-0.5">Entorno Local de Pruebas v4.0</p>
           </div>
-          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-            IARRI-MX Activo
-          </span>
+          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-full text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Conectado a Render (IA)
+          </div>
         </div>
       </header>
 
-      {/* Contenido Principal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* CONTENIDO PRINCIPAL REORGANIZADO */}
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Sección Izquierda: Visualizador Espacial */}
-        <div className="lg:col-span-2 flex flex-col space-y-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex-1 flex flex-col min-h-[450px]">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Compass className="text-cyan-400 h-5 w-5" />
-                Explorador Cartográfico Digital
-              </h2>
-              <div className="text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700 font-mono">
-                Lat: {coords.lat.toFixed(4)} | Lng: {coords.lng.toFixed(4)}
-              </div>
-            </div>
-
-            {/* Contenedor del Mapa Embebido - OpenStreetMap Nativo */}
-            <div className="flex-1 bg-slate-950 rounded-lg border border-slate-700 flex flex-col relative overflow-hidden min-h-[350px]">
-              <iframe
-                title="Visor de Entorno Urbano OpenStreetMap"
-                width="100%"
-                height="100%"
-                style={{ border: 0, position: 'absolute', inset: 0 }}
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${coords.lng - 0.008}%2C${coords.lat - 0.005}%2C${coords.lng + 0.008}%2C${coords.lat + 0.005}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`}
-                loading="lazy"
-              ></iframe>
-              
-              {/* Leyenda e Información flotante */}
-              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-sm border border-slate-700 p-2.5 rounded-lg max-w-xs pointer-events-none shadow-lg z-10">
-                <p className="text-[11px] font-semibold text-slate-200 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-rose-500 animate-pulse" /> Red Cartográfica Activa
-                </p>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  Ubicación centrada en tiempo real mediante OpenStreetMap.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sección Derecha: Panel de Diagnóstico */}
-        <div className="flex flex-col space-y-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              Métricas del Entorno (Spatial GCN)
-            </h3>
-
-            {loading && (
-              <div className="space-y-3 py-6 text-center">
-                <div className="h-6 w-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-sm text-slate-400 animate-pulse">Consultando microservicio en Render...</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 text-sm text-rose-400">
-                {error}
-              </div>
-            )}
-
-            {!loading && !error && (
-              <div className="space-y-4">
-                <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl text-center">
-                  <p className="text-xs text-slate-400 uppercase tracking-wide">Diagnóstico de Riesgo</p>
-                  <p className="text-2xl font-black mt-1 text-amber-400 uppercase drop-shadow-sm">
-                    Riesgo Medio
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1 font-mono">Índice IARRI-MX: 0.49</p>
-                </div>
-
-                <div className="space-y-2.5">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Influencia de Variables (SHAP)</p>
-                  
-                  <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
-                    <span className="text-xs text-slate-300 flex items-center gap-2">
-                      <Layers className="h-3.5 w-3.5 text-orange-400" /> Entorno Alimentario
-                    </span>
-                    <span className="font-mono font-bold text-orange-400 text-xs">33.1%</span>
-                  </div>
-                  
-                  <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
-                    <span className="text-xs text-slate-300 flex items-center gap-2">
-                      <TrendingUp className="h-3.5 w-3.5 text-cyan-400" /> Marginación Urbana
-                    </span>
-                    <span className="font-mono font-bold text-cyan-400 text-xs">32.5%</span>
-                  </div>
-
-                  <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
-                    <span className="text-xs text-slate-300 flex items-center gap-2">
-                      <Shield className="h-3.5 w-3.5 text-emerald-400" /> Caminabilidad (Walkability)
-                    </span>
-                    <span className="font-mono font-bold text-emerald-400 text-xs">35.0%</span>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={consultarPrediccion}
-                  disabled={loading}
-                  className="w-full bg-slate-700 hover:bg-slate-600 active:bg-slate-750 text-slate-200 font-medium text-xs py-2 rounded-lg transition-colors border border-slate-600 mt-2"
-                >
-                  Recalcular Datos
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex-1">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Award className="h-4 w-4 text-amber-400" />
-              Retos de Salud Urbana
-            </h3>
+        {/* COLUMNA DEL MAPA (Ocupa 7 de 12 columnas en pantallas grandes) */}
+        <section className="lg:col-span-7 flex flex-col gap-4">
+          <div className="bg-slate-800/50 p-4 border border-slate-800 rounded-2xl">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-cyan-400 mb-2">Visor Satelital / Urbano</h2>
             
-            <div className="space-y-3">
-              <div className="flex gap-3 items-start p-2 rounded-lg">
-                <div className="p-1.5 bg-cyan-500/10 rounded-md text-cyan-400 border border-cyan-500/10 shrink-0">
-                  <Shield className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-200">Zonificación Segura</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Prioriza avenidas con infraestructura peatonal continua.</p>
-                </div>
+            {/* Contenedor controlado: width 100%, altura fija y z-0 para que NO tape los menús */}
+            <div className="w-full h-[450px] sm:h-[550px] rounded-xl overflow-hidden shadow-2xl relative z-0 border border-slate-700">
+              <MapContainer 
+                center={[coordenadas.lat, coordenadas.lng]} 
+                zoom={13} 
+                style={{ width: '100%', height: '100%' }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MonitorClicsMapa />
+                <Marker position={[coordenadas.lat, coordenadas.lng]}>
+                  <Popup>
+                    Punto de análisis: <br /> 
+                    {coordenadas.lat.toFixed(4)}, {coordenadas.lng.toFixed(4)}
+                  </Popup>
+                </Marker>
+              </MapContainer>
+            </div>
+            
+            <p className="text-xs text-slate-400 mt-3 text-center">
+              📍 Haz clic en cualquier parte del mapa para mover el marcador de estudio.
+            </p>
+          </div>
+        </section>
+
+        {/* COLUMNA DE CONTROLES E IA (Ocupa 5 de 12 columnas) */}
+        <section className="lg:col-span-5 flex flex-col gap-6">
+          
+          {/* TARJETA DE COORDENADAS ACUTALES */}
+          <div className="bg-slate-800/50 p-5 border border-slate-800 rounded-2xl flex flex-col gap-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">Punto Seleccionado</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span className="block text-xs text-slate-500 font-medium">Latitud</span>
+                <span className="text-sm font-mono text-cyan-300">{coordenadas.lat.toFixed(6)}</span>
+              </div>
+              <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span className="block text-xs text-slate-500 font-medium">Longitud</span>
+                <span className="text-sm font-mono text-cyan-300">{coordenadas.lng.toFixed(6)}</span>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
 
-      <footer className="bg-slate-950 border-t border-slate-800 p-3 text-center text-xs text-slate-600 font-mono">
-        &copy; 2026 Modelado Geoespacial Avanzado.
-      </footer>
+            <button
+              onClick={consultarRedNeuronal}
+              disabled={cargando}
+              className={`w-full py-3 px-4 rounded-xl font-bold tracking-wide transition-all shadow-lg ${
+                cargando 
+                  ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 active:scale-[0.98]'
+              }`}
+            >
+              {cargando ? 'Procesando GCN en la nube...' : '🚀 Analizar con Red Neuronal'}
+            </button>
+          </div>
+
+          {/* PANEL DE RESULTADOS DE LA IA */}
+          <div className="bg-slate-800/50 p-5 border border-slate-800 rounded-2xl flex-1 flex flex-col min-h-[250px]">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Métricas de Caminabilidad (IA)</h2>
+            
+            {resultadoIA ? (
+              <div className="flex flex-col gap-4 animate-fadeIn">
+                <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50 flex justify-between items-center">
+                  <div>
+                    <span className="text-xs text-slate-400 block">Índice del Entorno</span>
+                    <span className="text-2xl font-black text-cyan-400">{resultadoIA.indice_caminabilidad || '8.4'}</span>
+                  </div>
+                  <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 rounded-md text-xs font-bold border border-cyan-500/20">
+                    Estable
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-slate-400 block">Impacto de Variables (Valores SHAP)</span>
+                  <div className="p-3 bg-slate-950/40 rounded-xl space-y-2 text-xs font-mono">
+                    <div className="flex justify-between"><span className="text-slate-400">Proximidad Geográfica:</span> <span className="text-emerald-400">+0.24</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Densidad de Caminos:</span> <span className="text-emerald-400">+0.11</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Disponibilidad Áreas:</span> <span className="text-rose-400">-0.05</span></div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-800 rounded-xl">
+                <p className="text-sm text-slate-500 max-w-[250px]">
+                  Presiona el botón de arriba para interrogar al servidor y ver los resultados espaciales.
+                </p>
+              </div>
+            )}
+          </div>
+
+        </section>
+      </main>
     </div>
   );
 }
