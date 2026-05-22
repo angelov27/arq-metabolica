@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css'; // Esto evita que el mapa se rompa visualmente
 import { 
   MapPin, 
   Award, 
