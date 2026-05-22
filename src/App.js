@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css'; // Esto evita que el mapa se rompa visualmente
+
+// Forzamos el Token directo en la ventana global por si la librería se pone rejegas
+window.mapboxgl = window.mapboxgl || {};
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5nZWxvdjI3IiwiYSI6ImNtcGgxNzZhbDB4NXgycHBvazk2YmYxcHgifQ.Kfb2IDdnlY2BeaM3GX65XA';
+
+const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com/api/predict-spatial";
 import { 
   MapPin, 
   Award, 
