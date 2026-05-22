@@ -97,7 +97,8 @@ export default function App() {
   });
 
   // URL del microservicio en Render (Asegúrate de cambiar "tu-url-de-render" por la tuya real)
-  const BACKEND_API_URL = "https://tu-url-de-render.onrender.com/api/predict-spatial";
+  
+  const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com/api/predict-spatial";
 
   // Función asíncrona para consultar la Red Neuronal de Grafos (GNN) en Render
   const consultarModeloEspacial = async () => {
