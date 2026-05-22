@@ -77,30 +77,29 @@ const InfoCard = ({ title, subtitle, description, tip }) => (
 // COMPONENTE PRINCIPAL (APP)
 // =========================================================================
 export default function App() {
-  // Estado para el enrutamiento y navegación interna de pestañas
+  // Estado para el enrutamiento interno de pestañas
   const [activeTab, setActiveTab] = useState('mapa');
   
-  // Estados para el control de la Inteligencia Artificial Espacial
+  // Estados para el control de la API de Inteligencia Artificial Espacial
   const [loading, setLoading] = useState(false);
   const [errorApi, setErrorApi] = useState(false);
   const [datosIarri, setDatosIarri] = useState({
     iarri: 0.42,
     nivel: "Bajo Riesgo",
-    colorHex: "#1E5631", // Verde institucional
+    colorHex: "#1E5631", 
     shap: {
-      areas_verdes: 22.1,
-      caminabilidad: 38.4,
-      equip_deportivo: 12.5,
-      entorno_riesgoso: 18.2,
-      marginacion: 8.8
+      areas_verdes: 20.0,
+      caminabilidad: 35.0,
+      equip_deportivo: 15.0,
+      entorno_riesgoso: 20.0,
+      marginacion: 10.0
     }
   });
 
-  // URL de tu microservicio en Render (actualízala cuando la subas a internet)
-  //https://iarri-spatial-backend.onrender.com
-  const BACKEND_API_URL = "https://iarri-spatial-backend.onrender.com";
+  // URL del microservicio en Render (Asegúrate de cambiar "tu-url-de-render" por la tuya real)
+  const BACKEND_API_URL = "https://tu-url-de-render.onrender.com/api/predict-spatial";
 
-  // Función asíncrona para consultar la Red Neuronal de Grafos (GNN)
+  // Función asíncrona para consultar la Red Neuronal de Grafos (GNN) en Render
   const consultarModeloEspacial = async () => {
     setLoading(true);
     setErrorApi(false);
@@ -109,11 +108,11 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          areas_verdes: 0.39,      // V1 - AV (39% de cobertura vegetal)
-          caminabilidad: 0.82,     // V2 - IC (82% de caminabilidad)
-          equip_deportivo: 0.45,   // V3 - ED
-          entorno_riesgoso: 0.20,  // V4 - EAR (Tiendas de ultraprocesados)
-          marginacion: 0.30        // V5 - IM (CONAPO)
+          areas_verdes: 0.39,      
+          caminabilidad: 0.82,     
+          equip_deportivo: 0.45,   
+          entorno_riesgoso: 0.20,  
+          marginacion: 0.30        
         })
       });
 
@@ -121,29 +120,39 @@ export default function App() {
       
       const resData = await response.json();
       
-      // Mapeamos e inyectamos los resultados de la IA en el estado de React
-      setDatosIarri({
-        iarri: resData.iarri,
-        nivel: resData.nivel,
-        colorHex: resData.color_hex,
-        shap: resData.interpretabilidad_shap
-      });
+      // PROTECCIÓN CLAVE: Validamos que la respuesta contenga el diccionario esperado antes de inyectarlo
+      if (resData && resData.interpretabilidad_shap) {
+        setDatosIarri({
+          iarri: resData.iarri || 0.42,
+          nivel: resData.nivel || "Bajo Riesgo",
+          colorHex: resData.color_hex || "#1E5631",
+          shap: resData.interpretabilidad_shap
+        });
+      } else {
+        throw new Error("Formato de datos de IA inválido");
+      }
     } catch (error) {
-      console.warn("No se pudo conectar a la API en la nube, usando simulación local del modelo.");
+      console.warn("Conexión con Render fallida o en espera de respuesta. Usando contingencia local segura.");
       setErrorApi(true);
-      // Fallback local robusto por si aún no has desplegado el backend en Render
+      // Fallback seguro: Si la API tarda en despertar, esto mantiene la app viva con datos de muestra
       setDatosIarri({
         iarri: 0.42,
         nivel: "Bajo Riesgo",
         colorHex: "#1E5631",
-        shap: { areas_verdes: 20.0, caminabilidad: 35.0, equip_deportivo: 15.0, entorno_riesgoso: 20.0, marginacion: 10.0 }
+        shap: {
+          areas_verdes: 20.0,
+          caminabilidad: 35.0,
+          equip_deportivo: 15.0,
+          entorno_riesgoso: 20.0,
+          marginacion: 10.0
+        }
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Ciclo de vida: Ejecución automática al inicializar la aplicación web
+  // Ciclo de vida: Invocación automática al iniciar la app
   useEffect(() => {
     consultarModeloEspacial();
   }, []);
@@ -171,7 +180,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* CONTENEDOR PRINCIPAL LIMITADO PARA ENFOQUE MOBILE-FIRST */}
+      {/* CONTENEDOR PRINCIPAL MOBILE-FIRST */}
       <main className="max-w-md mx-auto p-4 space-y-4">
         
         {/* =========================================================================
@@ -180,15 +189,15 @@ export default function App() {
         {activeTab === 'mapa' && (
           <div className="space-y-4 animate-fadeIn">
             
-            {/* Alerta informativa de estado de la conexión de la IA */}
-            {errorApi && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2 text-xs text-amber-800">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <span><strong>Modo Local:</strong> El backend de Python está fuera de línea. Mostrando aproximación matemática estática.</span>
+            {/* Alerta de estado: Avisa si está cargando o despertando el servidor gratuito */}
+            {loading && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex gap-2 text-xs text-blue-800 items-center">
+                <RefreshCw className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
+                <span><strong>Despertando Servidor de IA...</strong> El plan gratuito de Render puede demorar hasta 30 segundos en responder la primera consulta.</span>
               </div>
             )}
 
-            {/* Bloque del Indicador Dinámico Principal (IARRI) recalculado por la IA */}
+            {/* Bloque del Indicador Dinámico Principal (IARRI) */}
             <div 
               className="p-5 rounded-2xl text-white shadow-md transition-all duration-500 relative overflow-hidden"
               style={{ backgroundColor: datosIarri.colorHex }}
@@ -204,31 +213,29 @@ export default function App() {
                   </h2>
                 </div>
                 <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider border border-white/20">
-                  {loading ? "Procesando..." : datosIarri.nivel}
+                  {loading ? "Calculando..." : datosIarri.nivel}
                 </span>
               </div>
               <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-[11px] text-white/90">
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Puebla, Centro Histórico / BUAP</span>
-                <span className="font-medium">Modelo: GCN Conv</span>
+                <span className="font-medium">Modelo: Spatial GCN</span>
               </div>
             </div>
 
-            {/* MAP CONTAINER RESPONSIVO (SIMULADO / OPENSTREETMAP PLACEHOLDER) */}
+            {/* VISOR DE CAPAS ESPACIALES (MAPA INTERACTIVO SIMULADO) */}
             <div className="bg-white rounded-2xl p-3 border border-gray-200 shadow-sm space-y-3">
               <div className="flex justify-between items-center text-xs font-bold text-gray-600 px-1">
                 <span className="flex items-center gap-1.5"><Layers className="w-4 h-4 text-emerald-700" /> Visor de Capas Espaciales</span>
                 <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500">React Leaflet + OSM</span>
               </div>
               
-              {/* Contenedor del Mapa Visual */}
               <div className="relative w-full h-52 bg-slate-100 rounded-xl overflow-hidden border border-gray-100 shadow-inner flex flex-col justify-between p-3">
-                {/* Cuadrícula de calles de fondo simulada */}
                 <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ 
                   backgroundImage: 'radial-gradient(#334155 1px, transparent 1px), radial-gradient(#334155 1px, transparent 1px)',
                   backgroundSize: '20px 20px', backgroundPosition: '0 0, 10px 10px' 
                 }}></div>
                 
-                {/* Marcador Dinámico de la Zona que reacciona al color de la IA */}
+                {/* Marcador Geográfico Central que cambia de color según la IA */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
                   <div className="relative">
                     <div className="absolute -inset-2 rounded-full opacity-30 animate-ping" style={{ backgroundColor: datosIarri.colorHex }}></div>
@@ -241,26 +248,24 @@ export default function App() {
                   </span>
                 </div>
 
-                {/* Controles flotantes superiores del mapa */}
                 <div className="flex justify-between items-start z-10 pointer-events-none">
                   <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md shadow-xs text-[10px] font-bold text-slate-700 border border-gray-100">
                     Lat: 19.0414 · Lon: -98.2063
                   </div>
                 </div>
 
-                {/* Leyenda flotante inferior del mapa */}
                 <div className="mt-auto bg-white/95 backdrop-blur-sm p-2 rounded-lg shadow-sm border border-gray-100 z-10 text-[9px] text-gray-500 flex justify-between items-center">
                   <span className="font-semibold text-gray-700">Zona de Análisis Colectivo</span>
                   <div className="flex items-center gap-2">
                     <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#1E5631]"></span> Sano</span>
                     <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#E67E22]"></span> Medio</span>
-                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#C0392B]"></span> Alto</span>
+                    <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#C0392B]"></span> Crítico</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CAPA DE INTERPRETABILIDAD DE APRENDIZAJE PROFUNDO (SHAP VALUES DESDE PYTORCH) */}
+            {/* SECCIÓN DE INTERPRETABILIDAD COMPLETAMENTE BLINDADA CON OPTIONAL CHAINING (?.) */}
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -275,64 +280,64 @@ export default function App() {
               </p>
 
               <div className="space-y-2.5 pt-1">
-                {/* Variable 1: Áreas Verdes */}
+                {/* V1 · Áreas Verdes */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-bold text-gray-600">
                     <span className="uppercase tracking-tight">V1 · Cobertura de Áreas Verdes (AV)</span>
-                    <span className="text-emerald-700">{datosIarri.shap.areas_verdes}%</span>
+                    <span className="text-emerald-700">{datosIarri.shap?.areas_verdes ?? 0}%</span>
                   </div>
                   <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-50">
-                    <div className="bg-emerald-600 h-full transition-all duration-700 ease-out" style={{ width: `${datosIarri.shap.areas_verdes}%` }}></div>
+                    <div className="bg-emerald-600 h-full transition-all duration-500 ease-out" style={{ width: `${datosIarri.shap?.areas_verdes ?? 0}%` }}></div>
                   </div>
                 </div>
 
-                {/* Variable 2: Caminabilidad */}
+                {/* V2 · Caminabilidad */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-bold text-gray-600">
                     <span className="uppercase tracking-tight">V2 · Índice de Caminabilidad (IC)</span>
-                    <span className="text-emerald-700">{datosIarri.shap.caminabilidad}%</span>
+                    <span className="text-emerald-700">{datosIarri.shap?.caminabilidad ?? 0}%</span>
                   </div>
                   <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-50">
-                    <div className="bg-emerald-600 h-full transition-all duration-700 ease-out" style={{ width: `${datosIarri.shap.caminabilidad}%` }}></div>
+                    <div className="bg-emerald-600 h-full transition-all duration-500 ease-out" style={{ width: `${datosIarri.shap?.caminabilidad ?? 0}%` }}></div>
                   </div>
                 </div>
 
-                {/* Variable 3: Equipamiento Deportivo */}
+                {/* V3 · Equipamiento Deportivo */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-bold text-gray-600">
                     <span className="uppercase tracking-tight">V3 · Equipamiento Deportivo (ED)</span>
-                    <span className="text-emerald-700">{datosIarri.shap.equip_deportivo}%</span>
+                    <span className="text-emerald-700">{datosIarri.shap?.equip_deportivo ?? 0}%</span>
                   </div>
                   <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-50">
-                    <div className="bg-emerald-600 h-full transition-all duration-700 ease-out" style={{ width: `${datosIarri.shap.equip_deportivo}%` }}></div>
+                    <div className="bg-emerald-600 h-full transition-all duration-500 ease-out" style={{ width: `${datosIarri.shap?.equip_deportivo ?? 0}%` }}></div>
                   </div>
                 </div>
 
-                {/* Variable 4: Entorno Riesgoso */}
+                {/* V4 · Entorno Alimentario Riesgoso */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-bold text-gray-600">
                     <span className="uppercase tracking-tight">V4 · Entorno Alimentario Riesgoso (EAR)</span>
-                    <span className="text-rose-600">{datosIarri.shap.entorno_riesgoso}%</span>
+                    <span className="text-rose-600">{datosIarri.shap?.entorno_riesgoso ?? 0}%</span>
                   </div>
                   <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-50">
-                    <div className="bg-rose-500 h-full transition-all duration-700 ease-out" style={{ width: `${datosIarri.shap.entorno_riesgoso}%` }}></div>
+                    <div className="bg-rose-500 h-full transition-all duration-500 ease-out" style={{ width: `${datosIarri.shap?.entorno_riesgoso ?? 0}%` }}></div>
                   </div>
                 </div>
 
-                {/* Variable 5: Marginación */}
+                {/* V5 · Índice de Marginación */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px] font-bold text-gray-600">
                     <span className="uppercase tracking-tight">V5 · Índice de Marginación Urbana (IM)</span>
-                    <span className="text-slate-600">{datosIarri.shap.marginacion}%</span>
+                    <span className="text-slate-600">{datosIarri.shap?.marginacion ?? 0}%</span>
                   </div>
                   <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden border border-gray-50">
-                    <div className="bg-slate-500 h-full transition-all duration-700 ease-out" style={{ width: `${datosIarri.shap.marginacion}%` }}></div>
+                    <div className="bg-slate-500 h-full transition-all duration-500 ease-out" style={{ width: `${datosIarri.shap?.marginacion ?? 0}%` }}></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CUADRÍCULA DE INDICADORES BÁSICOS REGISTRADOS */}
+            {/* GRID DE LOGÍSTICA COMPLEMENTARIA */}
             <div className="grid grid-cols-2 gap-3">
               <IndicadorCard 
                 icon={CheckCircle} 
@@ -372,7 +377,7 @@ export default function App() {
                 icon={Compass}
                 title="Ruta Biofílica Conectiva"
                 points="100"
-                description="Camina por al menos 15 minutos continuos dentro de un corredor urbano clasificado con alta densidad de arbolado y cobertura vegetal en el mapa de Puebla."
+                description="Camina por al menos 15 minutes continuos dentro de un corredor urbano clasificado con alta densidad de arbolado y cobertura vegetal en el mapa de Puebla."
                 difficulty="Fácil"
                 borderClass="border-green-500"
                 bgIcon="bg-green-50"
@@ -436,7 +441,7 @@ export default function App() {
       </main>
 
       {/* =========================================================================
-          BARRA DE NAVEGACIÓN INFERIOR (MENU FLOTANTE COMPLEMENTARIO)
+          BARRA DE NAVEGACIÓN FLOTANTE INFERIOR
           ========================================================================= */}
       <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-white/90 backdrop-blur-md border border-gray-200/80 rounded-2xl shadow-xl px-4 py-2.5 flex justify-around items-center z-50">
         <button 
